@@ -288,12 +288,14 @@ x = tf.keras.layers.GlobalAveragePooling2D()(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
 
 
+'''
 x = tf.keras.layers.Dense(256, activation='relu')(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
 x = tf.keras.layers.Dense(128, activation='relu')(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
 x = tf.keras.layers.Dense(64, activation='relu')(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
+'''
 x = tf.keras.layers.Dense(32, activation='relu')(x)
 
 #split outputs to predict speed and angle
