@@ -1,0 +1,17 @@
+name: mlis2car_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - ipykernel
+  - pip
+  - pip:
+      - tensorflow==2.4.0
+      - opencv-python>=4.5.1.48
+      - imutils>=0.5.4
+      - art>=5.1
