@@ -1,4 +1,4 @@
-name: mlis2car_env
+name: car_env
 channels:
   - defaults
   - conda-forge
@@ -11,7 +11,7 @@ dependencies:
   - ipykernel
   - pip
   - pip:
-      - tensorflow==2.4.0
-      - opencv-python>=4.5.1.48
-      - imutils>=0.5.4
-      - art>=5.1
+      - tensorflow
+      - opencv-python
+      - imutils
+      - art
