@@ -12,7 +12,7 @@ class Model:
 
     def preprocess(self, image):
         im = tf.image.convert_image_dtype(image, tf.float32)
-        im = tf.image.resize(im, [100, 100]) #should be whatever the model input size is
+        im = tf.image.resize(im, [224, 224]) #should be whatever the model input size is
         im = tf.expand_dims(im, axis=0)
         return im
 
