@@ -20,7 +20,7 @@ class Model:
         angles = np.arange(17)*5+50
         image = self.preprocess(image)
         pred_angle, pred_speed = self.joint_model.predict(image)
-        speed = pred_speed[0][0].astype(int)*35
+        speed = int(pred_speed[0][0])*35
         angle = angles[np.argmax(pred_angle[0])]
         print('angle:', angle,'speed:', speed)
         
