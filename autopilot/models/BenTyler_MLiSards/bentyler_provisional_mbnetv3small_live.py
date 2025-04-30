@@ -4,8 +4,8 @@ import os
 
 class Model:
 
-    saved_speed_model = '/home/apyba3/PICAR-autopilot/MobNetV3Small_Kaggle/models/mobnetv3small_classification_model.h5'
-    saved_angle_model = '/home/apyba3/PICAR-autopilot/MobNetV3Small_Kaggle/models/mobnetv3small_regression_model.h5'
+    saved_speed_model = 'mobnetv3small_classification_model.h5'
+    saved_angle_model = 'mobnetv3small_regression_model.h5'
     def __init__(self):
         self.speed_model = tf.keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_speed_model))
         self.angle_model = tf.keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_angle_model))
