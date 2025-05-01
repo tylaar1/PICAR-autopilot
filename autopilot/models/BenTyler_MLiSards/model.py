@@ -3,9 +3,8 @@ import tensorflow as tf
 import os
 
 class Model:
-
-    saved_speed_model = 'finetuned_50epochs_mobnetv3small_classification_model.keras'
-    saved_angle_model = 'regression_finetuned_50epochs_mobnetv3small_model.keras'
+    saved_speed_model = 'tflite_finetuned_mbnetv3small_classification.tflite'
+    saved_angle_model = 'tflite_finetuned_mobnetv3small_regression.tflite'
     def __init__(self):
         self.speed_model = tf.keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_speed_model))
         self.angle_model = tf.keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_angle_model))
