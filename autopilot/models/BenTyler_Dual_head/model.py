@@ -26,6 +26,9 @@ class Model:
 
     def predict(self, image):
         image = self.preprocess(image)
+        if isinstance(image, tf.tensor):
+            image = image.numpy()
+
         self.interpreter.set_tensor(self.input_details[0]['index'],image)
         self.interpreter.invoke()
 
