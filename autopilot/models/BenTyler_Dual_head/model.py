@@ -13,6 +13,7 @@ class Model:
         self.interpreter = tf.lite.Interpreter(
             model_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_joint_model)
         )
+        self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
 
@@ -30,9 +31,6 @@ class Model:
 
         pred_angle = self.interpreter.get_tensor(self.output_details[0]['index'])
         pred_speed = self.interpreter.get_tensor(self.output_details[1]['index'])
-
-
-
         angles = np.arange(17)*5+50
         speed = int(pred_speed[0][0])*35
         angle = angles[np.argmax(pred_angle[0])]
