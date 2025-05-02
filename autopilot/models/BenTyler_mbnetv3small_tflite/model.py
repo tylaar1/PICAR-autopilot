@@ -39,7 +39,7 @@ class Model:
         im = tf.image.convert_image_dtype(image, tf.float32)
         im = tf.image.resize(im, [224, 224])
         im = tf.expand_dims(im, axis=0) #add batch dimension
-        return im
+        return im.numpy().astype(np.float32)
 
     def predict(self, image):
         angles = np.arange(17)*5+50
