@@ -293,12 +293,16 @@ x = tf.keras.layers.Dense(256, activation='relu')(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
 x = tf.keras.layers.Dense(128, activation='relu')(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
+'''
 x = tf.keras.layers.Dense(64, activation='relu')(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
-'''
+#y = tf.keras.layers.Dense(32, activation='relu')(x)
 x = tf.keras.layers.Dense(32, activation='relu')(x)
 
+
 #split outputs to predict speed and angle
+#idea - can we split the data slightly earlier to allow for more customization of the two outputs?
+#classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(y)
 classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(x)
 regression_output = tf.keras.layers.Dense(1, activation='linear', name="regression")(x)
 
@@ -324,104 +328,39 @@ model.load_weights('/home/ppytr13/car_frozen_regression.weights.h5')
 """Set up fine-tuning training"""
 
 history = model.fit(train_dataset,
-                    epochs=50,
+                    epochs=20,
                     batch_size=32,
                     validation_data=validation_dataset)
 
 #model.save_weights('/home/apyba3/car_unfrozen_regression.weights.h5')
-model.save_weights('/home/ppytr13/car_unfrozen_regression.weights.h5')
+model.save_weights('/home/ppytr13/PICAR-autopilot-1/autopilot/models/BenTyler_Dual_head/mobnet.weights.keras')
 
-"""# 3) Test-Set Predictions
 
-a) load in test data
-
-b) convert test images to numerical RGB feature maps
-
-c) generate predictions on the test set
-
-d) correctly format the predictions into a pandas dataframe
-
-e) save predictions to a file inside the hpc (to then later send from hpc to my laptop)
-
-### 3a) load in test data
-"""
-
-#image_folder_path = '/home/apyba3/KAGGLEDATAmachine-learning-in-science-ii-2025/test_data/test_data'
-#image_folder_path = '/content/drive/MyDrive/machine-learning-in-science-ii-2025/test_data/test_data'
-image_folder_path = '/home/ppytr13/machine-learning-in-science-ii-2025/test_data/test_data'
-image_file_paths = [
-    os.path.join(image_folder_path, f)
-    for f in os.listdir(image_folder_path)
-    if f.lower().endswith(('.png', '.jpg', '.jpeg'))
-]
-
-image_file_paths.sort(key=lambda x: int(os.path.splitext(os.path.basename(x))[0])) # sorts the files in the right order (1.png, 2.png, 3.png, ...)
-
-imagefilepaths_df = pd.DataFrame(
-    image_file_paths,
-    columns=['image_file_paths'],
-    index=[int(os.path.splitext(os.path.basename(path))[0]) for path in image_file_paths]
-)
-
-imagefilepaths_df.index.name = 'image_id'
-imagefilepaths_df.head()
-
-"""### 3b) convert test images to numerical RGB feature maps"""
-
-def process_image_no_label(image_path, resized_shape=(224, 224)):
-    image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)  # Use decode_png for PNG images
-    image = tf.image.resize(image, resized_shape)  # Resize to uniform shape
-    image = image / 255.0  # Normalize pixel values to [0,1]
-    return image
-
-test_dataset = tf.data.Dataset.from_tensor_slices((imagefilepaths_df["image_file_paths"]))
-
-test_dataset = test_dataset.map(process_image_no_label, num_parallel_calls=tf.data.AUTOTUNE)
-test_dataset = test_dataset.batch(32)
-test_dataset = test_dataset.prefetch(tf.data.AUTOTUNE)
-
-"""### 3c) generate predictions on test set"""
-
-predictions = model.predict(test_dataset.take(1))
-
-"""### 3d) correctly format the predictions into a pandas dataframe"""
-
-predictions_array = np.concatenate([predictions[0], predictions[1]], axis=1)
-predictions_df = pd.DataFrame(predictions_array, columns=['angle', 'speed'])
-
-predictions_df.head()
-
-predictions_df.loc[predictions_df['speed'] > 0.5, 'speed'] = 1
-predictions_df.loc[predictions_df['speed'] <= 0.5, 'speed'] = 0
-predictions_df['speed'] = predictions_df['speed'].astype(int)
-predictions_df.head()
-
-predictions_df['angle'].value_counts()
-
-"""### 3e) save predictions to a file inside the hpc (to then later send from hpc to my laptop)"""
-
-#predictions_df.to_csv('/home/apyba3/mbnetv3_angleregression_predictions.csv')
-predictions_df.to_csv('/home/ppytr13/mbnetv3_dual_predictions.csv')
 
 
 
 """## instead - convert to tf lite (chatgpt code - not tested yet)"""
 
+import tensorflow as tf
+
 # Define the converter
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
-# Enable optimizations for smaller size and faster inference
+# Enable default optimizations
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 
-# If your inputs have fixed shapes, specify them for further optimization
-converter.target_spec.supported_types = [tf.float16]  # Optional: FP16 for faster inference
+# Specify fixed input shape
+converter._experimental_fixed_input_shape = {"serving_default_input": [1, 224, 224, 3]}  # Batch size 1
+
+# Use FP16 for smaller model size and faster inference
+converter.target_spec.supported_types = [tf.float16]
 
 # Convert the model
 tflite_model = converter.convert()
 
-tflite_model_path = '/home/ppytr13/mbnetv3_dual_model.tflite'
-
 # Save the model as a TFLite file
+tflite_model_path = '/home/ppytr13/PICAR-autopilot-1/autopilot/models/BenTyler_Dual_head/mobnet.tflite'
 with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model)
+
+print("Optimized TFLite model saved at:", tflite_model_path)

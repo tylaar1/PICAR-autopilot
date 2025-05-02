@@ -1,4 +1,4 @@
-name: car_env
+name: ncar_env1
 channels:
   - defaults
   - conda-forge
