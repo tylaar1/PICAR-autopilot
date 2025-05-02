@@ -211,29 +211,31 @@ mbnet = tf.keras.applications.MobileNetV3Large(
     minimalistic=False
 )
 
-input_layer = tf.keras.Input(shape=(224, 224, 3))
+# Create input layer
+input_layer = tf.keras.Input(shape=(224, 224, 3), name="input")
 
+# Shared backbone
 x = mbnet(input_layer)
+x = tf.keras.layers.GlobalAveragePooling2D(name="global_avg_pool")(x)
+x = tf.keras.layers.Dropout(dropoutrate, name="dropout_shared")(x)
 
+# Classification branch
+y = tf.keras.layers.Dense(64, activation='relu', name="dense_class_1")(x)
+y = tf.keras.layers.Dropout(dropoutrate, name="dropout_class")(y)
+y = tf.keras.layers.Dense(32, activation='relu', name="dense_class_2")(y)
+classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(y)
 
-x = tf.keras.layers.GlobalAveragePooling2D()(x)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
+# Regression branch (completely separate path)
+z = tf.keras.layers.Dense(64, activation='relu', name="dense_reg_1")(x)
+z = tf.keras.layers.Dropout(dropoutrate, name="dropout_reg")(z)
+z = tf.keras.layers.Dense(32, activation='relu', name="dense_reg_2")(z)
+regression_output = tf.keras.layers.Dense(1, activation='linear', name="regression")(z)
 
-y = tf.keras.layers.Dense(64, activation='relu')(x)
-x = tf.keras.layers.Dense(64, activation='relu')(x)
-y = tf.keras.layers.Dropout(dropoutrate)(y)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
-y = tf.keras.layers.Dense(32, activation='relu')(y)
-x = tf.keras.layers.Dense(32, activation='relu')(x)
-
-#split outputs to predict speed and angle
-classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(x)
-regression_output = tf.keras.layers.Dense(1, activation='linear', name="regression")(x)
-
-#combine both outputs
+# Combine outputs in model
 model = tf.keras.Model(inputs=input_layer, outputs=[classification_output, regression_output])
 
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+# Compile with separate loss functions
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
               loss={'classification': 'binary_crossentropy', 'regression': 'mse'},
               metrics={'classification': 'accuracy', 'regression': 'mse'})
 
@@ -274,34 +276,33 @@ mbnet = tf.keras.applications.MobileNetV3Large(
     minimalistic=False
 )
 
-input_layer = tf.keras.Input(shape=(224, 224, 3))
+# Create input layer
+input_layer = tf.keras.Input(shape=(224, 224, 3), name="input")
 
+# Shared backbone
 x = mbnet(input_layer)
+x = tf.keras.layers.GlobalAveragePooling2D(name="global_avg_pool")(x)
+x = tf.keras.layers.Dropout(dropoutrate, name="dropout_shared")(x)
 
-
-x = tf.keras.layers.GlobalAveragePooling2D()(x)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
-
-y = tf.keras.layers.Dense(64, activation='relu')(x)
-x = tf.keras.layers.Dense(64, activation='relu')(x)
-y = tf.keras.layers.Dropout(dropoutrate)(y)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
-y = tf.keras.layers.Dense(32, activation='relu')(y)
-x = tf.keras.layers.Dense(32, activation='relu')(x)
-
-
-#split outputs to predict speed and angle
-#idea - can we split the data slightly earlier to allow for more customization of the two outputs?
+# Classification branch
+y = tf.keras.layers.Dense(64, activation='relu', name="dense_class_1")(x)
+y = tf.keras.layers.Dropout(dropoutrate, name="dropout_class")(y)
+y = tf.keras.layers.Dense(32, activation='relu', name="dense_class_2")(y)
 classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(y)
-regression_output = tf.keras.layers.Dense(1, activation='linear', name="regression")(x)
 
-#combine both outputs
+# Regression branch (completely separate path)
+z = tf.keras.layers.Dense(64, activation='relu', name="dense_reg_1")(x)
+z = tf.keras.layers.Dropout(dropoutrate, name="dropout_reg")(z)
+z = tf.keras.layers.Dense(32, activation='relu', name="dense_reg_2")(z)
+regression_output = tf.keras.layers.Dense(1, activation='linear', name="regression")(z)
+
+# Combine outputs in model
 model = tf.keras.Model(inputs=input_layer, outputs=[classification_output, regression_output])
 
+# Compile with separate loss functions
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
               loss={'classification': 'binary_crossentropy', 'regression': 'mse'},
               metrics={'classification': 'accuracy', 'regression': 'mse'})
-
 
 model.summary()
 
