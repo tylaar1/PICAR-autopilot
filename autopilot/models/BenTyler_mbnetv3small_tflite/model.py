@@ -112,7 +112,7 @@ class Model:
         return im
 
     def predict(self, image):
-        angles = np.arange(17)*5+50
+        # angles = np.arange(17)*5+50
         image = self.preprocess(image)
 
         # ADDED: Additional debugging to see raw model outputs
@@ -132,6 +132,7 @@ class Model:
         pred_angle = self.angle_interpreter.get_tensor(self.angle_output_details[0]['index'])[0]
         # ADDED: Print raw predictions for debugging
         print("Raw angle prediction:", pred_angle)
-        angle = angles[np.argmax(pred_angle)]
+        # angle = angles[np.argmax(pred_angle)]
+        angle = pred_angle[0]*80 + 50
         
         return angle, speed
