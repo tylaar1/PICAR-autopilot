@@ -219,16 +219,11 @@ x = mbnet(input_layer)
 x = tf.keras.layers.GlobalAveragePooling2D()(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
 
-#commented these out to reduce training time
-'''
-x = tf.keras.layers.Dense(256, activation='relu')(x)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
-x = tf.keras.layers.Dense(128, activation='relu')(x)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
+y = tf.keras.layers.Dense(64, activation='relu')(x)
 x = tf.keras.layers.Dense(64, activation='relu')(x)
+y = tf.keras.layers.Dropout(dropoutrate)(y)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
-
-'''
+y = tf.keras.layers.Dense(32, activation='relu')(y)
 x = tf.keras.layers.Dense(32, activation='relu')(x)
 
 #split outputs to predict speed and angle
@@ -287,23 +282,17 @@ x = mbnet(input_layer)
 x = tf.keras.layers.GlobalAveragePooling2D()(x)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
 
-
-'''
-x = tf.keras.layers.Dense(256, activation='relu')(x)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
-x = tf.keras.layers.Dense(128, activation='relu')(x)
-x = tf.keras.layers.Dropout(dropoutrate)(x)
-'''
+y = tf.keras.layers.Dense(64, activation='relu')(x)
 x = tf.keras.layers.Dense(64, activation='relu')(x)
+y = tf.keras.layers.Dropout(dropoutrate)(y)
 x = tf.keras.layers.Dropout(dropoutrate)(x)
-#y = tf.keras.layers.Dense(32, activation='relu')(x)
+y = tf.keras.layers.Dense(32, activation='relu')(y)
 x = tf.keras.layers.Dense(32, activation='relu')(x)
 
 
 #split outputs to predict speed and angle
 #idea - can we split the data slightly earlier to allow for more customization of the two outputs?
-#classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(y)
-classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(x)
+classification_output = tf.keras.layers.Dense(num_classes, activation='sigmoid', name="classification")(y)
 regression_output = tf.keras.layers.Dense(1, activation='linear', name="regression")(x)
 
 #combine both outputs
