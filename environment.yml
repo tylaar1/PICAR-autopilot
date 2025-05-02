@@ -15,3 +15,4 @@ dependencies:
       - opencv-python
       - imutils
       - art
+      - tflite-runtime

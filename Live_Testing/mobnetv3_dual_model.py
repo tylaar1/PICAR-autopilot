@@ -235,11 +235,28 @@ regression_output = tf.keras.layers.Dense(1, activation='linear', name="regressi
 model = tf.keras.Model(inputs=input_layer, outputs=[classification_output, regression_output])
 
 # Compile with separate loss functions
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
               loss={'classification': 'binary_crossentropy', 'regression': 'mse'},
               metrics={'classification': 'accuracy', 'regression': 'mse'})
 
+# below code can be used to adjust the loss weights for classification and regression tasks
+'''
+classification_weight = 3.0
+regression_weight = 1.0  # Adjust these weights to balance importance
 
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+    loss={
+        'classification': 'binary_crossentropy', 
+        'regression': 'mse'
+    },
+    loss_weights={
+        'classification': classification_weight, 
+        'regression': regression_weight
+    },
+    metrics={'classification': 'accuracy', 'regression': 'mse'}
+)
+'''
 model.summary()
 
 model.build(input_layer)
@@ -251,7 +268,7 @@ model.summary()
 """### 2c) Training the model on the training set"""
 
 history = model.fit(train_dataset,
-                    epochs=50,
+                    epochs=5,
                     batch_size=32,
                     validation_data=validation_dataset)
 
@@ -299,6 +316,8 @@ regression_output = tf.keras.layers.Dense(1, activation='linear', name="regressi
 # Combine outputs in model
 model = tf.keras.Model(inputs=input_layer, outputs=[classification_output, regression_output])
 
+
+
 # Compile with separate loss functions
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
               loss={'classification': 'binary_crossentropy', 'regression': 'mse'},
@@ -318,7 +337,7 @@ model.load_weights('/home/ppytr13/car_frozen_regression.weights.h5')
 """Set up fine-tuning training"""
 
 history = model.fit(train_dataset,
-                    epochs=20,
+                    epochs=2,
                     batch_size=32,
                     validation_data=validation_dataset)
 
