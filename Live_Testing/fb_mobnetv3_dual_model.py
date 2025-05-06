@@ -21,12 +21,15 @@ from keras.preprocessing.image import load_img, img_to_array
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import balanced_accuracy_score
 import matplotlib.pyplot as plt
+import re
+from keras.callbacks import ModelCheckpoint, LambdaCallback
+from PIL import Image
 
 # makes it so pd dfs aren't truncated
 
-pd.set_option('display.max_colwidth', None)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
+# pd.set_option('display.max_colwidth', None)
+# pd.set_option('display.max_rows', None)
+# pd.set_option('display.max_columns', None)
 
 #from google.colab import drive
 #drive.mount('/content/drive')
@@ -163,7 +166,7 @@ bendata_df = create_df_and_normalisation(bendata_folder_path)
 petrudata_df = create_df_and_normalisation(petrudata_folder_path)
 
 combinedextradata_df = combine_dfs_add_imageid(bendata_df, petrudata_df)
-display(combinedextradata_df.tail())
+# display(combinedextradata_df.tail())
 
 merged_df = pd.concat([kaggle_df, combinedextradata_df])
 
@@ -404,7 +407,7 @@ checkpoint_dir = '/home/apyba3/PICAR-autopilot/MobNetV3Small_kaggle/tyler_checkp
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 # Define checkpoint filepath for the finetuned model
-checkpoint_filepath = os.path.join(checkpoint_dir, 'stratifiedsplit_frozentrain_50epochs_mobnetv3small_classif_checkpoint.keras')
+checkpoint_filepath = os.path.join(checkpoint_dir, 'dualmobnet_checkpoint.keras')
 
 # Use the existing CustomModelCheckpoint class (no need to redefine it)
 # Just create a new instance with the updated filepath
@@ -436,9 +439,9 @@ early_stopping = EarlyStopping(
 
 # Train with both callbacks
 history = model.fit(
-    train_dataset,
-    validation_data=val_dataset,
-    epochs=100,
+    train_dataset.take(1),
+    validation_data=val_dataset.take(1),
+    epochs=1,
     callbacks=[custom_checkpoint, epoch_callback, early_stopping]
 )
 
@@ -496,7 +499,7 @@ def plot_loss_curves(history, save_path=None, fontsize=14):
 
 model.save_weights('/home/apyba3/car_frozen_regression.weights.h5')
 #model.save_weights('/home/ppytr13/car_frozen_regression.weights.h5')
-loss_plot_path = 'stratifiedsplit_earlystop_mbnetv3small_frozentrain_losscurves'
+loss_plot_path = '/home/apyba3/PICAR-autopilot/Live_Testing/frozen_dualhead_mobnet'
 plot_loss_curves(history, save_path=loss_plot_path, fontsize=22)
 tf.keras.backend.clear_session() #Clear keras session
 
@@ -548,7 +551,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
 
 model.summary()
 
-model.build(input_layer)
+# model.build(input_layer)
 
 mbnet.trainable = True
 
@@ -563,7 +566,7 @@ checkpoint_dir = '/home/apyba3/PICAR-autopilot/MobNetV3Small_Kaggle/checkpoints'
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 # Define checkpoint filepath for the finetuned model
-checkpoint_filepath = os.path.join(checkpoint_dir, 'stratifiedsplitfinetuned_mobnetv3small_classif_checkpoint.keras')
+checkpoint_filepath = os.path.join(checkpoint_dir, 'dualmobnet_classif_checkpoint.keras')
 
 # Use the existing CustomModelCheckpoint class (no need to redefine it)
 # Just create a new instance with the updated filepath
@@ -593,20 +596,20 @@ early_stopping = EarlyStopping(
 
 # Train with both callbacks
 history = model.fit(
-    train_dataset,
-    validation_data=val_dataset,
-    epochs=50,
+    train_dataset.take(1),
+    validation_data=val_dataset.take(1),
+    epochs=1,
     callbacks=[custom_checkpoint, epoch_callback, early_stopping]
 )
 
-loss_plot_path = 'stratifiedsplit_extrabendata_finetune_earlystop_mbnetv3small_losscurves'
+loss_plot_path = '/home/apyba3/PICAR-autopilot/Live_Testing/finetune_dualhead_mobnet'
 plot_loss_curves(history, save_path=loss_plot_path, fontsize=22)
 
-model_path = '/home/apyba3/PICAR-autopilot/autopilot/models/models/BenTyler_Dual_head/mobnet.keras'
+model_path = '/home/apyba3/PICAR-autopilot/autopilot/models/BenTyler_Dual_head/mobnet.keras'
 model.save(model_path)
 print(f"Final model saved to {model_path}")
 
-model_path = '/home/apyba3/PICAR-autopilot/autopilot/models/models/BenTyler_Dual_head/mobnet.h5'
+model_path = '/home/apyba3/PICAR-autopilot/autopilot/models/BenTyler_Dual_head/mobnet.h5'
 model.save(model_path)
 print(f"Final model saved to {model_path}")
 
@@ -631,7 +634,7 @@ converter.target_spec.supported_types = [tf.float16]
 tflite_model = converter.convert()
 
 # Save the model as a TFLite file
-tflite_model_path = '/home/apyba3/PICAR-autopilot-1/autopilot/models/BenTyler_Dual_head/mobnet.tflite'
+tflite_model_path = '/home/apyba3/PICAR-autopilot/autopilot/models/BenTyler_Dual_head/mobnet.tflite'
 with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model)
 
