@@ -77,12 +77,17 @@ class Model:
     # speed_model = 'tflite_finetuned_mbnetv3small_classification.tflite'
     # angle_model = 'tflite_finetuned_mobnetv3small_regression.tflite'
 
-    #extra data models
-    speed_model = tflite_stratsplit_classifspeed_filepath
-    angle_model = tflite_regression_filepath
+    # #extra data models
+    # speed_model = tflite_stratsplit_classifspeed_filepath
+    # angle_model = tflite_regression_filepath
 
     def __init__(self):
-        
+        self.tflite_stratsplit_classifspeed_filepath = 'tflite_finetunedstratifiedsplit_extradata_mobnetv3small_speedclassif.tflite'
+        self.tflite_NONstratsplit_classifspeed_filepath = 'tflite_nonstratsplit_finetuned_extradata_mobnetv3small_speedclassif.tflite'
+        self.tflite_regression_filepath = 'tflite_extradata_angleregression_finetuned_mobnetv3small.tflite'
+
+        self.speed_model = self.tflite_stratsplit_classifspeed_filepath
+        self.angle_model = self.tflite_regression_filepath
         try:
             delegate = tf.lite.experimental.load_delegate('libedgetpu.so.1') #'libedgetpu.1.dylib' for mac or 'libedgetpu.so.1' for linux
             print('Using TPU')
