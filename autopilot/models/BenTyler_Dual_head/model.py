@@ -23,10 +23,11 @@ class Model:
     def predict(self, image):
         print('make prediction')
 
-        image = Model.preprocess(image)
 
         input_index = self.input_details[0]['index']
-        self.interpreter.set_tensor(input_index, image)
+
+        processed_image = self.preprocess(image)
+        self.interpreter.set_tensor(input_index, processed_image)
 
         self.interpreter.invoke()
 
@@ -42,13 +43,13 @@ class Model:
 
         angle = angle_output[0]
         speed = speed_output[0]
-
-        angle, speed = Model.preprocess(angle, speed)
+        print(f'raw angle: {angle}, raw speed: {speed}')
+        angle, speed = self.postprocess(angle, speed)
 
         return angle, speed
     
-    @staticmethod
-    def postprocess(angle, speed):
+    # @staticmethod
+    def postprocess(self, angle, speed):
         possible_angles = np.arange(0,1.01,0.0625)
         possible_speeds = np.array([0,1])
 
@@ -64,7 +65,7 @@ class Model:
         print(f'angle: {angle}, speed: {speed}')
         return angle, speed
     
-    @staticmethod
+    # @staticmethod
     def preprocess(self, image):
         im = tf.image.resize(image, [224, 224])
         # Then normalize to [0,1] range - matching training exactly
