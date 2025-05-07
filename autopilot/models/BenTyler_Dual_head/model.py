@@ -108,7 +108,7 @@ class Model:
     
     def preprocess(self, image):
         # im = tf.image.convert_image_dtype(image, tf.float32)
-        im = tf.image.resize(im, [224, 224])
+        im = tf.image.resize(image, [224, 224])
         im /= 255.0
         im = tf.expand_dims(im, axis=0)  # add batch dimension
         return im
@@ -120,18 +120,11 @@ class Model:
         self.interpreter.invoke()
         
         # Get output in format [speed, angle]
-        prediction = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
-        
-        # Process speed and angle based on model output
-        # Assuming the model directly outputs speed and angle values
-        speed = np.around(prediction[0]).astype(int) * 35
-        
-        # If your angle is still categorical, you can adapt this section
-        # Example: if the second value represents an angle index
-        angles = np.arange(17) * 5 + 50
-        if len(prediction) > 2:  # If second value is a distribution over angles
-            angle = angles[np.argmax(prediction[1:])]
-        else:  # If second value is the direct angle
-            angle = prediction[1]
+        pred_speed = self.interpreter.get_tensor(self.output_details[0]['index'])[0]
+        pred_angle = self.interpreter.get_tensor(self.output_details[1]['index'])[0]
+        print(f'raw angle: {pred_angle}, raw speed: {pred_speed}')
+
+        speed = np.around(pred_speed[0]).astype(int)*35
+        angle = pred_angle[0]*80+50
             
         return angle, speed
