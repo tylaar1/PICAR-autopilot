@@ -421,8 +421,8 @@ custom_checkpoint = CustomModelCheckpoint(
 
 # Define epoch callback 
 epoch_callback = LambdaCallback(
-    on_epoch_begin=lambda epoch, logs: print(f"\nStarting Epoch {epoch + 1}..."),
-    on_epoch_end=lambda epoch, logs: print(f"Completed Epoch {epoch + 1}, Loss: {logs['loss']:.4f}, Val Loss: {logs['val_loss']:.4f}")
+    on_epoch_begin=lambda epoch, logs: print(f"\nFROZEN TRAINING: Starting Epoch {epoch + 1}..."),
+    on_epoch_end=lambda epoch, logs: print(f"FROZEN TRAINING: Completed Epoch {epoch + 1}, Loss: {logs['loss']:.4f}, Val Loss: {logs['val_loss']:.4f}")
 )
 
 from keras.callbacks import EarlyStopping
@@ -439,9 +439,9 @@ early_stopping = EarlyStopping(
 
 # Train with both callbacks
 history = model.fit(
-    train_dataset.take(1),
-    validation_data=val_dataset.take(1),
-    epochs=1,
+    train_dataset,
+    validation_data=val_dataset,
+    epochs=100,
     callbacks=[custom_checkpoint, epoch_callback, early_stopping]
 )
 
@@ -458,7 +458,7 @@ def plot_loss_curves(history, save_path=None, fontsize=14):
         fontsize: Font size for labels, ticks, and legend
     """
     # Create figure with appropriate size
-    plt.figure(figsize=(10, 6), dpi=300)
+    plt.figure(figsize=(6, 6), dpi=300)
     
     # Epochs on X-axis
     epochs = range(1, len(history.history['loss']) + 1)
@@ -580,14 +580,14 @@ custom_checkpoint = CustomModelCheckpoint(
 
 # Define epoch callback 
 epoch_callback = LambdaCallback(
-    on_epoch_begin=lambda epoch, logs: print(f"\nStarting Epoch {epoch + 1}..."),
-    on_epoch_end=lambda epoch, logs: print(f"Completed Epoch {epoch + 1}, Loss: {logs['loss']:.4f}, Val Loss: {logs['val_loss']:.4f}")
+    on_epoch_begin=lambda epoch, logs: print(f"\nFINE-TUNING: Starting Epoch {epoch + 1}..."),
+    on_epoch_end=lambda epoch, logs: print(f"FINE-TUNING: Completed Epoch {epoch + 1}, Loss: {logs['loss']:.4f}, Val Loss: {logs['val_loss']:.4f}")
 )
 
 # Define early stopping callback
 early_stopping = EarlyStopping(
     monitor='val_loss',
-    patience=8,
+    patience=10,
     min_delta=0.001,
     mode='min',
     restore_best_weights=True,  # This loads the best weights into model memory when stopping
@@ -596,9 +596,9 @@ early_stopping = EarlyStopping(
 
 # Train with both callbacks
 history = model.fit(
-    train_dataset.take(1),
-    validation_data=val_dataset.take(1),
-    epochs=1,
+    train_dataset,
+    validation_data=val_dataset,
+    epochs=100,
     callbacks=[custom_checkpoint, epoch_callback, early_stopping]
 )
 
