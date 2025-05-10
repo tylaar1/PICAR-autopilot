@@ -75,7 +75,7 @@ pd.set_option('display.max_columns', None)
 
 
 # labels_file_path = '/content/drive/MyDrive/machine-learning-in-science-ii-2025/training_norm.csv' # tylers file path
-labels_file_path = '/home/apyba3/KAGGLEDATAmachine-learning-in-science-ii-2025/training_norm.csv' # ben hpc file path (mlis2 cluster)
+labels_file_path = '/home/ppytr13/machine-learning-in-science-ii-2025/training_norm.csv' # ben hpc file path (mlis2 cluster)
 # labels_file_path = '/home/ppytr13/machine-learning-in-science-ii-2025/training_norm.csv' # tyler hpc file path (mlis2 cluster)
 labels_df = pd.read_csv(labels_file_path, index_col='image_id')
 
@@ -83,7 +83,7 @@ labels_df = pd.read_csv(labels_file_path, index_col='image_id')
 # In[6]:
 
 
-image_folder_path = '/home/apyba3/KAGGLEDATAmachine-learning-in-science-ii-2025/training_data/training_data' # OG data ben hpc file path (mlis2 cluster)
+image_folder_path = '/home/ppytr13/machine-learning-in-science-ii-2025/training_data/training_data' # OG data ben hpc file path (mlis2 cluster)
 # image_folder_path = '/home/ppytr13/machine-learning-in-science-ii-2025//training_data/training_data'
 # image_folder_path = '/content/drive/MyDrive/machine-learning-in-science-ii-2025/training_data/training_data' # tylers file path
 image_file_paths = [
@@ -367,60 +367,23 @@ BATCH_SIZE = 32
 # In[ ]:
 
 
-# def process_image(image_path, label, resized_shape=(224, 224)):
-#     image = tf.io.read_file(image_path)
-#     image = tf.image.decode_jpeg(image, channels=3)
-#     image = tf.image.resize(image, resized_shape)
-#     image = image / 255.0  # Normalise pixel values to [0,1]
-#     return image, label
-
-# dataset = tf.data.Dataset.from_tensor_slices((cleaned_df["image_file_paths"], cleaned_df["speed"])) # Convert pd df into a tf ds
-
-# dataset = dataset.map(process_image, num_parallel_calls=tf.data.AUTOTUNE)
-
-# dataset = dataset.cache()
-# dataset = dataset.shuffle(len(cleaned_df))
-# dataset = dataset.batch(BATCH_SIZE)
-# dataset = dataset.prefetch(tf.data.AUTOTUNE)
-
-import tensorflow as tf
-import numpy as np
-from sklearn.model_selection import train_test_split
-
-# Start with dataframe columns
-image_paths = cleaned_df["image_file_paths"].values
-angle_labels = cleaned_df["angle"].values
-
-# Perform stratified split on the raw data
-train_paths, val_paths, train_labels, val_labels = train_test_split(
-    image_paths, 
-    angle_labels,
-    test_size=0.2,
-    random_state=42,
-    stratify=angle_labels  # This ensures same distribution
-)
-
-# Process function remains the same
 def process_image(image_path, label, resized_shape=(224, 224)):
     image = tf.io.read_file(image_path)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize(image, resized_shape)
-    image = image / 255.0
+    image = image / 255.0  # Normalise pixel values to [0,1]
     return image, label
 
-# Create separate datasets
-train_dataset = tf.data.Dataset.from_tensor_slices((train_paths, train_labels))
-train_dataset = train_dataset.map(process_image, num_parallel_calls=tf.data.AUTOTUNE)
-train_dataset = train_dataset.cache()
-train_dataset = train_dataset.shuffle(len(train_paths))
-train_dataset = train_dataset.batch(BATCH_SIZE)
-train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+dataset = tf.data.Dataset.from_tensor_slices((cleaned_df["image_file_paths"], cleaned_df["speed"])) # Convert pd df into a tf ds
 
-val_dataset = tf.data.Dataset.from_tensor_slices((val_paths, val_labels))
-val_dataset = val_dataset.map(process_image, num_parallel_calls=tf.data.AUTOTUNE)
-val_dataset = val_dataset.cache()
-val_dataset = val_dataset.batch(BATCH_SIZE)
-val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
+dataset = dataset.map(process_image, num_parallel_calls=tf.data.AUTOTUNE)
+
+dataset = dataset.cache()
+dataset = dataset.shuffle(len(cleaned_df))
+dataset = dataset.batch(BATCH_SIZE)
+dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+
 
 
 # check to see if the distributions are the same
@@ -428,55 +391,7 @@ val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 # In[ ]:
 
 
-def check_distribution(dataset, name):
-    # Collect all labels from the dataset
-    all_labels = []
-    for _, labels in dataset:
-        # If batched, need to extract from batch
-        if isinstance(labels, tf.Tensor) and len(labels.shape) > 0:
-            all_labels.extend(labels.numpy())
-        else:
-            all_labels.append(labels.numpy())
-    
-    # Convert to numpy array
-    all_labels = np.array(all_labels)
-    
-    # Count occurrences of each class
-    unique_values, counts = np.unique(all_labels, return_counts=True)
-    
-    # Calculate percentages
-    total = len(all_labels)
-    percentages = (counts / total) * 100
-    
-    # Print results
-    print(f"\n{name} Set Distribution:")
-    print("-" * 30)
-    for value, count, percentage in zip(unique_values, counts, percentages):
-        print(f"Class {value}: {count} samples ({percentage:.2f}%)")
-    
-    # Create a simple bar chart
-    plt.figure(figsize=(4, 4))
-    plt.bar(unique_values, counts)
-    plt.title(f"{name} Set Distribution")
-    plt.xlabel('Angle Value', fontsize=17)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
-    plt.ylabel('Count', fontsize=17)
-    plt.xticks(unique_values)
-    plt.grid(axis='y', alpha=0.3)
-    
-    # Add count labels on top of bars
-    # for i, count in enumerate(counts):
-    #     plt.text(unique_values[i], count + (max(counts) * 0.01), 
-    #              f"{count}\n({percentages[i]:.1f}%)", 
-    #              ha='center')
-    
-    plt.tight_layout()
-    plt.show()
 
-# Check both datasets
-check_distribution(train_dataset, "Training")
-check_distribution(val_dataset, "Validation")
 
 
 # lets check and see if what we have done works
@@ -484,22 +399,20 @@ check_distribution(val_dataset, "Validation")
 # In[25]:
 
 
-for images, labels in train_dataset.take(1):
-    print(images.shape, labels.shape)
 
 
-# ### 1j) Splitting data into training and validation sets (test set is already provided in kaggle data)
-
-# In[26]:
+### 1j) Splitting data into training and validation sets (test set is already provided in kaggle data)
 
 
-# # 85-15 split
 
-# dataset_size = tf.data.experimental.cardinality(dataset).numpy()
-# train_size = int(0.85 * dataset_size)
 
-# train_dataset = dataset.take(train_size)
-# val_dataset = dataset.skip(train_size)
+# 85-15 split
+
+dataset_size = tf.data.experimental.cardinality(dataset).numpy()
+train_size = int(0.85 * dataset_size)
+
+train_dataset = dataset.take(train_size)
+val_dataset = dataset.skip(train_size)
 
 
 # In[27]:
@@ -526,8 +439,6 @@ def augment_image(image, label):
   image = tf.image.stateless_random_brightness(image, 0.2, seed)
   image = tf.image.stateless_random_contrast(image, 0.8, 1.2, seed)
   image = tf.image.stateless_random_hue(image, 0.2, seed)
-  image = tf.image.stateless_random_saturation(image, 0.8, 1.2, seed)
-  image = tf.image.stateless_random_flip_left_right(image, seed)
   return image, label
 
 # Create a dataset of augmented images from the original train_dataset
@@ -569,21 +480,7 @@ print(f"Total number of images in train_dataset: {total_images}")
 # In[31]:
 
 
-f, axarr = plt.subplots(1,3, figsize=(15, 5))
 
-i = 0
-for image_batch, label_batch in train_dataset.take(1):  # Take one batch
-    for image in image_batch:  # Iterate through images in the batch
-        if i < 3:  # Only display the first 5 images
-            print('image shape: ', np.shape(image))
-            tf.print('label:', label_batch[i])  # Print label for the corresponding image
-            axarr[i].imshow(image)
-            axarr[i].axis('off')
-            i += 1
-        else:
-            break  # Stop after displaying 5 images
-plt.show()
-plt.savefig('augmented_images.pdf', format='pdf')
 
 
 # # 2) REGRESSION ANGLE Model Building - MobNetV3Small Transfer Learning
@@ -727,7 +624,7 @@ class CustomModelCheckpoint(tf.keras.callbacks.Callback):
 
 
 # Define checkpoint directory and create it if it doesn't exist
-checkpoint_dir = '/home/apyba3/PICAR-autopilot/V3Largecheckpoints'
+checkpoint_dir = '/home/ppytr13/PICAR-autopilot/V3Largecheckpoints'
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 # Define checkpoint filepath for the finetuned model
@@ -754,7 +651,7 @@ from keras.callbacks import EarlyStopping
 # Define early stopping callback
 early_stopping = EarlyStopping(
     monitor='val_loss',
-    patience=10,
+    patience=8,
     min_delta=0.001,
     mode='min',
     restore_best_weights=True,  # This loads the best weights into model memory when stopping
@@ -765,7 +662,7 @@ early_stopping = EarlyStopping(
 history = model.fit(
     train_dataset,
     validation_data=val_dataset,
-    epochs=100,
+    epochs=30,
     callbacks=[custom_checkpoint, epoch_callback, early_stopping]
 )
 
@@ -878,7 +775,7 @@ plot_loss_curves(history, save_path=loss_plot_path, fontsize=22)
 
 
 # Save the final model
-model_path = '/home/apyba3/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_frozen_model.keras'
+model_path = '/home/ppytr13/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_frozen_model.keras'
 model.save(model_path)
 print(f"Final model saved to {model_path}")
 
@@ -888,7 +785,7 @@ print(f"Final model saved to {model_path}")
 # In[ ]:
 
 
-frozen_weights_path = '/home/apyba3/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_frozen_weights.keras'
+frozen_weights_path = '/home/ppytr13/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_frozen_weights.keras'
 
 model.save_weights(frozen_weights_path)
 
@@ -973,7 +870,7 @@ print("Successfully loaded weights and prepared model for fine-tuning!")
 
 
 # Define checkpoint directory and create it if it doesn't exist
-checkpoint_dir = '/home/apyba3/PICAR-autopilot/V3Large_checkpoints'
+checkpoint_dir = '/home/ppytr13/PICAR-autopilot/V3Large_checkpoints'
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 # Define checkpoint filepath for the finetuned model
@@ -998,7 +895,7 @@ epoch_callback = LambdaCallback(
 # Define early stopping callback
 early_stopping = EarlyStopping(
     monitor='val_loss',
-    patience=10,
+    patience=8,
     min_delta=0.001,
     mode='min',
     restore_best_weights=True,  # This loads the best weights into model memory when stopping
@@ -1009,7 +906,7 @@ early_stopping = EarlyStopping(
 history = model.fit(
     train_dataset,
     validation_data=val_dataset,
-    epochs=100,
+    epochs=30,
     callbacks=[custom_checkpoint, epoch_callback, early_stopping]
 )
 
@@ -1018,7 +915,7 @@ history = model.fit(
 
 
 # This will save the best weights (as already restored by EarlyStopping)
-model.save_weights('/home/apyba3/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_finetune_weights.weights.keras')
+model.save_weights('/home/ppytr13/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_finetune_weights.weights.keras')
 
 
 # In[ ]:
@@ -1039,144 +936,5 @@ plot_loss_curves(history, save_path=loss_plot_path, fontsize=22)
 model_path = '/home/apyba3/PICAR-autopilot/V3Large_angleregression_stratsplit_earlystop_finetune_model.keras'
 model.save(model_path)
 print(f"Final model saved to {model_path}")
-
-
-# In[50]:
-
-
-# # fine tuning and validation metrics in epoch order
-# epochs = list(range(1, 21))  # Epochs 1-20
-
-# train_loss = [
-#     0.5377, 0.1384, 0.0902, 0.0674, 0.0524, 0.0396, 0.0289, 0.0252, 0.0198, 0.0194,
-#     0.0165, 0.0160, 0.0128, 0.0133, 0.0097, 0.0107, 0.0092, 0.0080, 0.0087, 0.0097
-# ]
-
-# val_loss = [
-#     0.5684, 0.7044, 2.4431, 2.2911, 1.3723, 0.4966, 0.1164, 0.1343, 0.4855, 0.3430,
-#     0.1570, 0.0530, 1.3682, 7.3271, 0.2327, 0.8250, 0.2618, 4.4855, 0.9644, 3.3733
-# ]
-
-# train_acc = [
-#     0.8695, 0.9506, 0.9667, 0.9758, 0.9818, 0.9860, 0.9898, 0.9911, 0.9935, 0.9932,
-#     0.9941, 0.9944, 0.9951, 0.9953, 0.9965, 0.9964, 0.9968, 0.9973, 0.9973, 0.9969
-# ]
-
-# val_acc = [
-#     0.7518, 0.7766, 0.7597, 0.7657, 0.7627, 0.8547, 0.9619, 0.9570, 0.8438, 0.9467,
-#     0.9619, 0.9806, 0.8517, 0.7524, 0.9625, 0.8723, 0.9249, 0.7663, 0.8456, 0.7900
-# ]
-
-
-# # 3) REGRESSION MODEL Test-Set Predictions
-# 
-# a) load in test data
-# 
-# b) convert test images to numerical RGB feature maps
-# 
-# c) generate predictions on the test set
-# 
-# d) correctly format the predictions into a pandas dataframe
-# 
-# e) save predictions to a file inside the hpc (to then later send from hpc to my laptop)
-
-# ### 3a) load in test data
-
-# In[ ]:
-
-
-image_folder_path = '/home/apyba3/KAGGLEDATAmachine-learning-in-science-ii-2025/test_data/test_data'
-# image_folder_path = '/home/ppyt13/machine-learning-in-science-ii-2025/test_data/test_data' # tylers file path
-image_file_paths = [
-    os.path.join(image_folder_path, f)
-    for f in os.listdir(image_folder_path)
-    if f.lower().endswith(('.png', '.jpg', '.jpeg'))
-]
-
-image_file_paths.sort(key=lambda x: int(os.path.splitext(os.path.basename(x))[0])) # sorts the files in the right order (1.png, 2.png, 3.png, ...)
-
-imagefilepaths_df = pd.DataFrame(
-    image_file_paths,
-    columns=['image_file_paths'],
-    index=[int(os.path.splitext(os.path.basename(path))[0]) for path in image_file_paths]
-)
-
-imagefilepaths_df.index.name = 'image_id'
-imagefilepaths_df.head()
-
-
-# ### 3b) convert test images to numerical RGB feature maps
-
-# In[ ]:
-
-
-def process_image_no_label(image_path, resized_shape=(224, 224)):
-    image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)  # Use decode_png for PNG images
-    image = tf.image.resize(image, resized_shape)  # Resize to uniform shape
-    image = image / 255.0  # Normalize pixel values to [0,1]
-    return image
-
-test_dataset = tf.data.Dataset.from_tensor_slices((imagefilepaths_df["image_file_paths"]))
-
-test_dataset = test_dataset.map(process_image_no_label, num_parallel_calls=tf.data.AUTOTUNE)
-test_dataset = test_dataset.batch(BATCH_SIZE)
-test_dataset = test_dataset.prefetch(tf.data.AUTOTUNE)
-
-
-# ### 3c) generate predictions on test set
-
-# In[ ]:
-
-
-predictions = model.predict(test_dataset)
-
-
-# ### 3d) correctly format the predictions into a pandas dataframe
-
-# In[ ]:
-
-
-predictions_df = pd.DataFrame(predictions, columns=['speed'])
-
-
-# In[ ]:
-
-
-predictions_df.head()
-
-
-# In[ ]:
-
-
-predictions_df[predictions_df['speed'] > 0.5] = 1
-predictions_df[predictions_df['speed'] < 0.5] = 0
-
-predictions_df['speed'] = predictions_df['speed'].astype(int)
-
-
-# In[ ]:
-
-
-predictions_df.head()
-
-
-# In[ ]:
-
-
-predictions_df['speed'].value_counts()
-
-
-# ### 3e) save predictions to a file inside the hpc (to then later send from hpc to my laptop)
-
-# In[ ]:
-
-
-predictions_df.to_csv('/home/apyba3/mobnetv3small_speedclassification_withvalidation_withpetrudata.csv')
-
-
-# In[ ]:
-
-
 
 
