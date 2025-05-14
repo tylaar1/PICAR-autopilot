@@ -67,8 +67,8 @@ class Model:
  
     
     def __init__(self):
-        self.saved_speed_model = 'H5finetuned_50epochs_mobnetv3small_classification_model.h5'
-        self.saved_angle_model = 'H5regression_finetuned_50epochs_mobnetv3small_model.h5'
+        self.saved_speed_model = 'mobnetv3small_classification_model.h5'
+        self.saved_angle_model = 'mobnetv3small_regression_model.h5'
         self.speed_model = tf.keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_speed_model))
         self.angle_model = tf.keras.models.load_model(os.path.join(os.path.dirname(os.path.abspath(__file__)), self.saved_angle_model))
 
@@ -97,7 +97,7 @@ class Model:
         processed_image = self.preprocess(image)
         predictions = [self.speed_model(processed_image, training=False),
                        self.angle_model(processed_image, training=False)]
-        speed_prediction = predictions[0].numpy()
+        speed_prediction = np.around(predictions[0].numpy())
         angle_prediction = predictions[1].numpy()
 
         speed_value = float(speed_prediction[0][0])
